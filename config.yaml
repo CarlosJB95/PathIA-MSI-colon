@@ -1,0 +1,54 @@
+# =====================================================================
+#  config.yaml — configuración de ejemplo para pathia-msi-colon
+#  Toda ruta, hiperparámetro y semilla vive AQUÍ, no dentro del código.
+#  Se lee desde los notebooks/scripts con PyYAML:
+#      import yaml
+#      cfg = yaml.safe_load(open("configs/config.yaml"))
+# =====================================================================
+
+project:
+  name: pathia-msi-colon
+  task: clasificacion_MSI          # MSI-H vs MSS
+  tissue: colorrectal
+  scope: investigacion_educacion   # sin uso clinico
+  seed: 42                         # semilla global (repite en NumPy/torch)
+
+# --- Rutas (relativas al repo; los datos viven FUERA del repo) -------
+paths:
+  data_root: ../data/tcga_crc      # NO versionado (ver .gitignore)
+  tiles_dir: ../data/tiles
+  splits: splits/tcga_crc_patientlevel.csv
+  results: results/
+  data_card: data_cards/tcga_crc.md
+
+# --- Extracción de parches (tiling) ---------------------------------
+tiling:
+  patch_size: 224
+  magnification: 20                # objetivo en aumentos (x)
+  mpp_target: 0.5                  # microns per pixel deseado
+  tissue_threshold: 0.25           # pct_tejido minimo para conservar el parche
+  overlap: 0.0
+
+# --- Modelo fundacional (extractor de embeddings) -------------------
+model:
+  encoder: UNI                     # principal; alternativas: phikon-v2, hipt
+  embedding_dim: 1024
+  batch_size: 64                   # ajustar a la VRAM (Colab vs RTX 4070)
+  device: auto                     # cpu / cuda / auto
+
+# --- Particion (split) ----------------------------------------------
+split:
+  level: patient                   # OBLIGATORIO por paciente (evita leakage)
+  scheme: [0.70, 0.15, 0.15]       # train / val / test
+  stratify_by: label
+
+# --- Evaluacion ------------------------------------------------------
+eval:
+  primary_metric: auprc            # clase rara desbalanceada
+  metrics: [auroc, auprc, sensibilidad, precision, balanced_accuracy]
+  levels: [patch, slide, patient]  # reportar en los tres niveles
+
+# --- Reproducibilidad ------------------------------------------------
+repro:
+  deterministic: true
+  log_versions: true               # guardar versiones de librerias en results/
