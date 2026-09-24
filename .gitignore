@@ -2,7 +2,11 @@
 #  DATOS E IMÁGENES — NUNCA se suben al repositorio
 #  (WSI y parches pesan GB y pueden contener información sensible)
 # =====================================================================
-data/
+# data/ existe en el repo SOLO con .gitkeep y README.md; su contenido se ignora.
+# (se usa data/* y no data/ para que las excepciones "!" funcionen)
+data/*
+!data/.gitkeep
+!data/README.md
 raw/
 tiles/
 patches/
@@ -21,6 +25,16 @@ patches/
 *.png
 *.jpg
 *.jpeg
+*.zip
+*.tar
+*.tar.gz
+*.7z
+# Embeddings / features extraídos (derivados de UNI: NO redistribuir)
+embeddings/
+features/
+*.parquet
+*.pkl
+*.joblib
 # Excepción: permitir figuras de resultados versionables
 !results/**/*.png
 !docs/**/*.png
@@ -33,9 +47,23 @@ patches/
 *.ckpt
 *.safetensors
 *.onnx
+*.bin
 checkpoints/
 weights/
 models/pretrained/
+hf_cache/
+.cache/
+
+# =====================================================================
+#  LOGS DE EXPERIMENTOS (se versiona solo lo curado en results/)
+# =====================================================================
+runs/
+wandb/
+mlruns/
+lightning_logs/
+outputs/
+logs/
+*.log
 
 # =====================================================================
 #  SECRETOS Y CREDENCIALES
@@ -56,12 +84,23 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
-.ipynb_checkpoints
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.virtual_documents/
+.jupyter/
+
+# Google Colab: carpetas que aparecen al montar Drive o al clonar en /content
+sample_data/
+.config/
+drive/
 
 # entornos virtuales
 .venv/
 venv/
 env/
+.conda/
 
 # =====================================================================
 #  SISTEMA OPERATIVO / EDITOR
