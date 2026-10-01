@@ -36,11 +36,25 @@
 - **@0.50:** sens 0.687 · espec 0.757 · VPP 0.738 · VPN 0.707.
 - **Umbral:** no se declara punto de operación. Sens ≥ 0.90 exige umbral 0.08 con espec 0.213.
 
-## 5. Limitaciones
+## 5. Features de textura (GLCM / Haralick)
+- **Cálculo:** `rgb2gray` → 32 niveles → GLCM `symmetric=True`, `normed=True`; distancias 1 y 3 px
+  (0.5 y 1.5 µm a 0.5 µm/px); 4 ángulos promediados (invariancia a rotación); 5 descriptores:
+  contraste, disimilitud, homogeneidad, energía, correlación.
+- **Distancias:** elegidas a priori (escala de cromatina). Exploración de escala solo en train
+  (1, 4, 16 px): el contraste invierte su dirección entre 1 y 4 px → promediar distancias podría
+  cancelar señal (hipótesis no probada).
+- **Comparación controlada (test una vez, sin IC):** solo color AUC 0.752
+  → color + textura AUC 0.936.
+- **Limitaciones específicas:** textura calculada sobre imágenes normalizadas con Macenko (100K;
+  7K no declarada), lo que puede alterar intensidades locales; la textura podría captar artefactos
+  de adquisición o diferencias de procedencia (p. ej., gastrectomía en NORM); correlación = 1 por
+  convención en parches uniformes.
+
+## 6. Limitaciones
 - Sin `patient_id` por parche: la ausencia de fuga depende de la separación por cohorte.
 - Umbrales explorados en test (sin conjunto de validación) → estimaciones optimistas.
 - Solo 6 features de color: sensibilidad de tamizaje solo a costa de especificidad inaceptable.
 - Submuestreo pequeño (33 TUM en el análisis de prevalencia 10%) → alta varianza; falta IC 95%.
 
-## 6. Historial
+## 7. Historial
 - 2026-09-30 · v0.1 · Creación (Día 26). Autor: Carlos.
