@@ -1,125 +1,73 @@
-# pathia-msi-colon
+# PathIA-MSI-colon
 
-Predicción reproducible de inestabilidad de microsatélites (**MSI-H vs MSS**) a
-partir de histología H&E de cáncer colorrectal, mediante *deep learning* sobre
-*whole slide images* (WSI).
+Ruta de formación de 12 meses en IA aplicada a patología digital computacional (colon y mama), con meta final de predecir MSI-H a partir de histología H&E. Este repositorio documenta los notebooks, data cards y resultados de cada etapa.
 
-> ⚠️ **Alcance — investigación y educación, sin uso clínico.**
-> Este proyecto es un trabajo de aprendizaje autodirigido y de investigación
-> reproducible. **No es un dispositivo médico, no está validado clínicamente y no
-> debe usarse para decisiones diagnósticas ni de tratamiento.** Las conclusiones
-> se limitan a factibilidad metodológica.
+> **Material de aprendizaje — sin uso clínico.** Ningún resultado de este repositorio debe usarse para diagnóstico ni decisiones clínicas.
 
----
+## Estado actual · `v0.2-mes2-sem2` (Mes 2, Semana 2)
 
-## Objetivo
+**Notebook `06_intro_clasificacion`:** estudio de factibilidad TUM (epitelio tumoral) vs NORM (mucosa normal) a nivel de parche, con features hechas a mano y regresión logística.
 
-## Sustrato morfológico del MSI-H
+| Modelo | Features | AUC (test) | Sens / Espec @0.50 |
+|:--|:--|:--:|:--:|
+| Solo color | 6 (media y DE por canal RGB) | 0.752 | 0.673 / 0.750 |
+| Color + textura | 11 (+ 5 descriptores de Haralick, GLCM) | **0.936** | 0.887 / 0.877 |
 
-Un modelo sobre H&E no *mide* inestabilidad de microsatélites —eso es genómica—,
-pero el fenotipo MSI-H deja **huellas histológicas reconocibles**. Esa es la
-premisa que hace plausible predecir MSI-H desde morfología.
-
-Rasgos asociados al fenotipo MSI-H en cáncer colorrectal:
-
-| Rasgo | Descripción | Valor discriminante |
-|---|---|---|
-| **TILs intraepiteliales** | Linfocitos infiltrando los nidos tumorales (no solo peritumorales) | El más robusto |
-| **Reacción Crohn-like** | Agregados linfoides peritumorales en el frente de invasión | Alto |
-| **Subtipos especiales** | Medular (casi patognomónico), mucinoso, poco diferenciado, células en anillo de sello | Alto |
-| **Ausencia de "dirty necrosis"** | La necrosis luminal eosinofílica con detritos es típica de MSS; su **escasez** orienta a MSI-H | Rasgo negativo |
-| **Bordes expansivos (pushing)** | Margen de invasión no infiltrativo; frecuente localización en colon derecho | Moderado |
-
-**La paradoja MSI-H:** histología a menudo "de alto grado" (poco diferenciada)
-con comportamiento clínico **favorable** — la apariencia y el pronóstico divergen.
-
-### Por qué es aprendible
-
-Ningún rasgo es 100 % sensible ni específico por sí solo; por eso el ojo humano
-acierta solo **parcialmente**. La señal está en la **combinación** de estas
-texturas, distribuida sobre miles de parches y a menudo por debajo del umbral de
-la inspección visual caso por caso. Un modelo puede aprender esa combinación —que
-es justo donde puede complementar, no sustituir, al patólogo.
-
-Este es el precedente que el proyecto busca reproducir con rigor metodológico:
-
-> Kather, J.N., Pearson, A.T., Halama, N. et al. *Deep learning can predict
-> microsatellite instability directly from histology in gastrointestinal cancer.*
-> **Nat Med** 25, 1054–1056 (2019). https://doi.org/10.1038/s41591-019-0462-y
-
-> ⚠️ **Alcance:** esta sección justifica la *plausibilidad biológica* del objetivo.
-> No implica validez clínica: las conclusiones del proyecto se limitan a
-> factibilidad metodológica.
+Comparación controlada: mismo split por cohorte, mismo pipeline (`StandardScaler` + `LogisticRegression`), semilla 42; único cambio, el vector de features; test evaluado una sola vez. **Sin intervalos de confianza todavía** (bootstrap pendiente).
 
 ## Datos
 
-Se usan **exclusivamente datos públicos**. **El repositorio no contiene imágenes
-ni datos de pacientes** — solo manifiestos (listas de IDs y coordenadas),
-configuración y resultados. Cada dataset se documenta en `data_cards/` con su
-origen, licencia y forma de obtenerlo, para que cualquiera lo **descargue por su
-cuenta** y reproduzca el trabajo.
+- **Fuente:** Kather, J. N., Halama, N., & Marx, A. (2018). *100,000 histological images of human colorectal cancer and healthy tissue* (Version v0.1) [Dataset]. Zenodo. https://doi.org/10.5281/zenodo.1214456
+- **Licencia:** Creative Commons Attribution 4.0 International (CC BY 4.0).
+- **Espejo usado:** Hugging Face `1aurent/NCT-CRC-HE` (parquet).
+- **Split por cohorte:** train = NCT-CRC-HE-100K (86 pacientes; NCT Biobank + archivo UMM) · test = CRC-VAL-HE-7K (50 pacientes; NCT). Zenodo declara que las cohortes no comparten pacientes; no hay `patient_id` por parche, así que no es reverificable parche por parche.
+- **Submuestreo:** 600 TUM + 600 NORM (train) y 300 + 300 (test), semilla 42.
+- Procedencia completa y limitaciones: [`data_cards/nct_crc_baseline.md`](data_cards/nct_crc_baseline.md) (v0.2).
 
-| Fuente | Uso | Nota |
-|---|---|---|
-| TCGA (COAD/READ) | Principal | Público; respetar términos de acceso |
-| CPTAC | Principal / validación | Público |
-| PANDA | Apoyo | Público (Kaggle) |
-| PAIP2020, TNBC, Gleason 2019 | Respaldo | Requieren registro/lead time |
+## Cómo correr
 
+1. Abrir `06_intro_clasificacion.ipynb` en Google Colab.
+2. *Ejecutar todo*. La primera celda monta Google Drive y **se detiene si el montaje falla** (`assert os.path.ismount`), para no escribir en una carpeta local que desaparece.
+3. Los datos se cargan desde caché en Drive; solo si no existe el caché se descarga el subconjunto de Hugging Face (una vez).
 
-## Modelos fundacionales
+**Ruta del proyecto en Drive:** `MyDrive/DigiPath/IA Docs/PathIA 3.0/`
 
-| Modelo | Rol | Licencia / acceso |
-|---|---|---|
-| **UNI** | Principal | *Gated* en Hugging Face — **CC-BY-NC-ND-4.0, uso académico no comercial** |
-| Phikon-v2 | Comparación | owkin/HistoSSLscaling |
-| HIPT | Comparación | mahmoodlab/HIPT (pesos vía Git LFS) |
+| Caché | Contenido |
+|:--|:--|
+| `Downloads/nct_dia24.npz` | Parches RGB 224×224: `Xtr` (1200), `Xte` (600) y etiquetas |
+| `Downloads/nct_textura_d1-3_n32.npz` | Features de textura `Xtr_tex` (1200, 5), `Xte_tex` (600, 5) + sus parámetros (distancias 1 y 3 px, 32 niveles); se recalcula si cambian |
 
-> Los pesos de los modelos **no se versionan** en este repo (ver `.gitignore`).
-> El uso de UNI se limita a investigación académica no comercial conforme a su
-> licencia.
+Los cachés **no** se versionan en el repositorio (son datos).
 
-## Entorno y reproducibilidad
-
-- **Fases 1–4:** Google Colab · **Fases 5–12:** RTX 4070 local (CUDA 12.x).
-- Semilla global fija (`42`) en NumPy / random / frameworks.
-- Particiones **por paciente** (nunca por laminilla) — sin *leakage*.
-- Versiones ancladas: ver `requirements.txt`.
-
-```bash
-# clonar y preparar entorno
-git clone https://github.com/<usuario>/pathia-msi-colon.git
-cd pathia-msi-colon
-pip install -r requirements.txt
-```
-
-## Estructura del repositorio
+## Estructura y convenciones
 
 ```
-pathia-msi-colon/
-├── README.md            # este archivo
-├── .gitignore           # qué NO se sube (datos, pesos, secretos)
-├── requirements.txt     # dependencias con versiones ancladas
-├── LICENSE              # licencia del código (MIT)
-├── notebooks/           # 01_python..., 02_wsi..., 03_visualizaciones.ipynb ...
-├── src/                 # funciones reutilizables (tiling, QC, deconvolución, métricas)
-├── configs/             # hiperparámetros y rutas en YAML (no hardcodeados)
-├── splits/              # particiones por paciente (solo IDs, sin imágenes)
-├── results/             # figuras, métricas, tablas (p. ej. fig_distribuciones_qc.png)
-└── data_cards/          # descripción de cada dataset SIN los datos
+notebooks/     06_intro_clasificacion.ipynb
+data_cards/    nct_crc_baseline.md        ← generado desde el notebook (no editar a mano)
+results/       06_*.png                   ← figuras
 ```
 
-## Estado
+- **Prefijo de figuras = número del notebook:** `results/06_matriz_confusion.png`, `results/06_roc_comparacion.png`, etc.
+- **Cachés nombrados por contenido**, no por día.
+- El data card se escribe **al final** del notebook (§9) con los números insertados desde variables, para que nunca se desincronice de los resultados.
 
-Ruta de formación de 12 meses (Mes 1 en curso). El hito del Mes 1 es este
-repositorio con los 4 notebooks fundacionales corriendo de punta a punta en Colab.
+## Limitaciones principales
 
-## Licencia
+- **Imágenes normalizadas con Macenko** en NCT-CRC-HE-100K; para CRC-VAL-HE-7K la normalización no está declarada explícitamente en Zenodo.
+- **Test de una sola institución** (NCT): no evalúa generalización entre centros.
+- **Desplazamiento de distribución** documentado entre 100K y 7K: la brecha train→test puede reflejar diferencias entre cohortes, no solo capacidad del modelo.
+- **Procedencia de las clases:** TUM incluye metástasis hepáticas de CRC; NORM fue aumentada con regiones no tumorales de gastrectomía.
+- La textura podría captar también **artefactos de adquisición o de procedencia**, no solo morfología.
+- **Sin punto de operación declarado:** los umbrales se exploraron en test con fines ilustrativos; un umbral definitivo requiere conjunto de validación independiente, uso clínico definido y prevalencia de la población destino.
+- Sin IC 95% (bootstrap pendiente).
 
-Código bajo **MIT** (ver `LICENSE`). Los datasets y modelos conservan sus propias
-licencias, referidas arriba y en `data_cards/`.
+## Versiones
+
+| Tag | Contenido |
+|:--|:--|
+| `v0.1-mes2-sem1` | Baseline de color: tabla 2×2, prevalencia, ROC/AUC, punto de operación ilustrativo, data card v0.1 |
+| `v0.2-mes2-sem2` | Textura GLCM/Haralick, comparación controlada (AUC 0.752 → 0.936), data card v0.2, QC de reproducibilidad |
 
 ## Autor
 
-Carlos — anatomopatólogo · proyecto de investigación/educación en patología
-digital computacional.
+Carlos J Beltrán — Médico Anatomopatólogo, miembro del Consejo Mexicano de Médicos Anatomopatólogos, A.C.
