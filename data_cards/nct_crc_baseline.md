@@ -1,4 +1,4 @@
-# Data card — Baseline NCT-CRC-HE (TUM vs NORM)
+# Data card — Baseline NCT-CRC-HE (TUM vs NORM) · v0.3
 
 > **Material de aprendizaje — sin uso clínico.**
 
