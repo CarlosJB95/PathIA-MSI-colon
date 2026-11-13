@@ -25,7 +25,7 @@
 |:------|:-----------------|:-----------------------------------|:---------:|:--------------------:|
 | Train | NCT-CRC-HE-100K  | NCT Biobank (Heidelberg) + archivo UMM (Mannheim) | 86 | 600 + 600 |
 | Test  | CRC-VAL-HE-7K    | Banco de tejidos del NCT (Heidelberg) | 50     | 300 + 300            |
-| RF color + textura (300 árboles, `max_features='sqrt'`) | 11 | 0.821 | 0.720 | 0.777 | sin IC · CV en train 0.942 (optimista: sin `patient_id`) |
+
 - **Semilla:** 42 · **Caché:** `Downloads/nct_dia24.npz` (Drive, PathIA 3.0).
 - **Separación por paciente:** garantizada **por cohorte**: Zenodo declara que el 7K no comparte
   pacientes con el 100K. No reverificable por parche.
@@ -45,6 +45,12 @@
   cancelar señal (hipótesis no probada).
 - **Comparación controlada (test una vez, sin IC):** solo color AUC 0.752
   → color + textura AUC 0.936.
+- **RF vs LR (Día 31, test una vez, sin IC):** mismas 11 features, mismo split.
+  | Modelo | Features | AUC test | Sens @0.50 | Espec @0.50 | CV 5f en train |
+  |:--|:-:|:-:|:-:|:-:|:-:|
+  | LR color | 6 | 0.752 | — | — | — |
+  | LR color + textura | 11 | 0.936 | 0.887 | 0.877 | 0.943 ± 0.010 |
+  | RF color + textura (300 árboles, `max_features='sqrt'`) | 11 | 0.821 | 0.720 | 0.777 | 0.942 ± 0.012 |
 - **Limitaciones específicas:** textura calculada sobre imágenes normalizadas con Macenko (100K;
   7K no declarada), lo que puede alterar intensidades locales; la textura podría captar artefactos
   de adquisición o diferencias de procedencia (p. ej., gastrectomía en NORM); correlación = 1 por
@@ -55,6 +61,8 @@
 - Umbrales explorados en test (sin conjunto de validación) → estimaciones optimistas.
 - Solo 6 features de color: sensibilidad de tamizaje solo a costa de especificidad inaceptable.
 - Submuestreo pequeño (33 TUM en el análisis de prevalencia 10%) → alta varianza; falta IC 95%.
-
+- Modelos empatados en CV interna (LR 0.943 / RF 0.942) se separaron en la cohorte independiente (0.936 / 0.821): la CV sin `patient_id` sobreestima más al modelo flexible. Diferencia LR vs RF sin IC → no se afirma formalmente cuál es mejor.
 ## 7. Historial
 - 2026-09-30 · v0.1 · Creación (Día 26). Autor: Carlos.
+- 2026-10-09 · v0.3 · Añade textura GLCM, comparación controlada (color vs color + textura) y RF vs LR (Día 31). Autor: Carlos.
+
