@@ -25,7 +25,7 @@
 |:------|:-----------------|:-----------------------------------|:---------:|:--------------------:|
 | Train | NCT-CRC-HE-100K  | NCT Biobank (Heidelberg) + archivo UMM (Mannheim) | 86 | 600 + 600 |
 | Test  | CRC-VAL-HE-7K    | Banco de tejidos del NCT (Heidelberg) | 50     | 300 + 300            |
-
+| RF color + textura (300 árboles, `max_features='sqrt'`) | 11 | 0.821 | 0.720 | 0.777 | sin IC · CV en train 0.942 (optimista: sin `patient_id`) |
 - **Semilla:** 42 · **Caché:** `Downloads/nct_dia24.npz` (Drive, PathIA 3.0).
 - **Separación por paciente:** garantizada **por cohorte**: Zenodo declara que el 7K no comparte
   pacientes con el 100K. No reverificable por parche.
